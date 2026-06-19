@@ -1,2 +1,1 @@
-# shhtott
-Itz bio abt my amigo
+# BIO

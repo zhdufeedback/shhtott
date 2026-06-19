@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>bio by paradox?</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/game-icons/icons@master/font/game-icons.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+            background: #0a0708;
+            color: #ece9e0;
+            overflow-x: hidden;
+        }
+
+        /* Заставка: лепестки сакуры + меч */
+        .sakura-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: #0a0507;
+            z-index: 9999;
+            overflow: hidden;
+        }
+
+        .petal-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0.45;
+        }
+
+        .sakura-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(20,10,15,0.5) 0%, rgba(5,3,5,0.9) 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1;
+            backdrop-filter: blur(2px);
+        }
+
+        .katana-title {
+            font-size: 5rem;
+            font-weight: 800;
+            letter-spacing: 6px;
+            background: linear-gradient(135deg, #f5cdd4, #e2a1b0, #c77d8f);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0 0 20px rgba(226,161,176,0.5);
+            margin-bottom: 20px;
+            animation: bladeGlow 3s infinite;
+        }
+
+        @keyframes bladeGlow {
+            0% { text-shadow: 0 0 5px #e2a1b0; opacity: 0.9; }
+            50% { text-shadow: 0 0 25px #f5cdd4; opacity: 1; }
+            100% { text-shadow: 0 0 5px #e2a1b0; opacity: 0.9; }
+        }
+
+        .sakura-location-box {
+            font-size: 1.1rem;
+            background: rgba(0,0,0,0.6);
+            padding: 8px 24px;
+            border-radius: 40px;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+            backdrop-filter: blur(5px);
+            color: #f0d3d9;
+        }
+
+        .highlight-loc {
+            color: #ffced9;
+            font-weight: 600;
+            border-bottom: 1px solid #e2a1b0;
+        }
+
+        .enter-samurai {
+            padding: 14px 48px;
+            background: transparent;
+            border: 1.5px solid #e2a1b0;
+            color: #ffdfe6;
+            font-size: 1rem;
+            font-weight: 600;
+            letter-spacing: 3px;
+            cursor: pointer;
+            transition: 0.3s;
+            margin-top: 30px;
+            border-radius: 50px;
+            box-shadow: 0 0 12px rgba(226,161,176,0.3);
+        }
+
+        .enter-samurai:hover {
+            background: rgba(226,161,176,0.2);
+            box-shadow: 0 0 30px rgba(226,161,176,0.5);
+            transform: translateY(-2px);
+        }
+
+        .status-terminal {
+            position: absolute;
+            bottom: 40px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 0.8rem;
+            color: #ac8b8f;
+            font-family: monospace;
+        }
+
+        /* Основной контент */
+        .main-content {
+            opacity: 0;
+            transition: opacity 1s ease;
+        }
+        .main-content.show {
+            opacity: 1;
+        }
+
+        /* Герой — самурайский сет */
+        .hero-samurai {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+            background: radial-gradient(ellipse at 20% 30%, #1e1217, #070405);
+        }
+
+        .hero-grid {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 60px;
+            max-width: 1200px;
+            width: 100%;
+            align-items: center;
+        }
+
+        .avatar-katana {
+            position: relative;
+            width: 260px;
+            height: 260px;
+        }
+
+        .katana-circle {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 2px solid #e2a1b0;
+            box-shadow: 0 0 30px rgba(226,161,176,0.2);
+            padding: 8px;
+        }
+
+        .avatar-img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+            filter: grayscale(15%);
+            border: 1px solid #a86f7e;
+        }
+
+        .status-dot-sakura {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 18px;
+            height: 18px;
+            background: #e2a1b0;
+            border-radius: 50%;
+            box-shadow: 0 0 8px #ffb7c5;
+            border: 2px solid #1e1217;
+        }
+
+        .hero-title {
+            font-size: 4.2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #f5cdd4, #ffffff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            letter-spacing: 2px;
+        }
+
+        .hero-sub {
+            font-size: 1.3rem;
+            color: #cfaab0;
+            border-left: 3px solid #e2a1b0;
+            padding-left: 15px;
+            margin: 15px 0;
+        }
+
+        .stats-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 14px;
+            margin: 25px 0;
+        }
+
+        .stat-pill {
+            background: rgba(226,161,176,0.08);
+            border: 1px solid #4a2e34;
+            padding: 6px 18px;
+            border-radius: 40px;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .description-text {
+            color: #c9b3b8;
+            max-width: 500px;
+            margin-bottom: 30px;
+            line-height: 1.5;
+        }
+
+        .social-links-jp {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .soc-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            border: 1px solid #633c44;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #e2a1b0;
+            font-size: 1.4rem;
+            transition: 0.2s;
+            text-decoration: none;
+        }
+
+        .soc-icon:hover {
+            border-color: #ffc0cd;
+            color: white;
+            transform: translateY(-3px);
+            background: rgba(226,161,176,0.15);
+        }
+
+        .soc-icon i {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Секция пути самурая */
+        .bushido-section {
+            padding: 80px 20px;
+            background: #0c080a;
+        }
+
+        .section-header {
+            text-align: center;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 50px;
+        }
+        .section-header span {
+            font-size: 0.9rem;
+            color: #c77d8f;
+            display: block;
+            font-weight: 400;
+        }
+
+        .grid-bushido {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .card-samurai {
+            background: rgba(20, 12, 15, 0.6);
+            backdrop-filter: blur(4px);
+            border: 1px solid #38242a;
+            border-radius: 24px;
+            padding: 28px;
+            transition: 0.2s;
+        }
+
+        .card-samurai:hover {
+            border-color: #c77d8f;
+        }
+
+        .card-header-icon {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            border-bottom: 1px solid #38242a;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+        .card-header-icon i {
+            font-size: 2rem;
+            color: #e2a1b0;
+        }
+
+        .project-item {
+            margin-bottom: 25px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 18px;
+            padding: 16px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .project-item:hover {
+            background: rgba(226,161,176,0.1);
+            transform: translateX(5px);
+        }
+
+        .project-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .tag-group {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 12px;
+        }
+        .tag {
+            background: #2b191f;
+            padding: 4px 12px;
+            border-radius: 30px;
+            font-size: 0.75rem;
+            color: #e2bdc4;
+        }
+
+        .info-row {
+            display: flex;
+            gap: 12px;
+            padding: 12px 0;
+            border-bottom: 1px dashed #2a1c20;
+        }
+
+        /* Прогресс-бары с катаной */
+        .game-stat {
+            margin-bottom: 22px;
+        }
+        .game-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            margin-bottom: 6px;
+        }
+        .bar-bg {
+            height: 6px;
+            background: #2a1b20;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .bar-fill {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #c77d8f, #e2a1b0);
+            border-radius: 10px;
+            transition: width 1s ease;
+        }
+
+        .activity-block {
+            background: rgba(226,161,176,0.05);
+            border-radius: 18px;
+            padding: 18px;
+            text-align: center;
+            margin-top: 25px;
+        }
+
+        .quote-samurai {
+            border-left: 3px solid #e2a1b0;
+            background: rgba(226,161,176,0.05);
+            padding: 18px;
+            margin-top: 25px;
+            font-style: italic;
+        }
+
+        .music-player-container {
+            max-width: 600px;
+            margin: 0 auto;
+            grid-column: span 2;
+        }
+
+        .youtube-player {
+            position: relative;
+            width: 100%;
+            padding-bottom: 56.25%;
+            height: 0;
+            overflow: hidden;
+            border-radius: 18px;
+            border: 1px solid #38242a;
+        }
+
+        .youtube-player iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+            border-radius: 18px;
+        }
+
+        .footer-samurai {
+            border-top: 1px solid #2a1e22;
+            padding: 50px 20px;
+            text-align: center;
+            color: #886e74;
+        }
+
+        @media (max-width: 900px) {
+            .hero-grid {
+                grid-template-columns: 1fr;
+                text-align: center;
+                gap: 30px;
+            }
+            .grid-bushido {
+                grid-template-columns: 1fr;
+            }
+            .hero-title { font-size: 3rem; }
+            .stats-row { justify-content: center; }
+            .social-links-jp { justify-content: center; }
+            .avatar-katana { margin: 0 auto; }
+            .hero-sub { text-align: left; }
+            .music-player-container {
+                grid-column: span 1;
+            }
+        }
+
+        .fade-up {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: 0.7s;
+        }
+        .fade-up.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+
+<!-- ЗАСТАВКА ЛЕПЕСТКИ + МЕЧ -->
+<div class="sakura-screen" id="sakuraScreen">
+    <canvas class="petal-canvas" id="petalCanvas"></canvas>
+    <div class="sakura-overlay">
+        <div class="katana-title">ПАРАДОКС</div>
+        <div class="sakura-location-box">
+            <i class="fas fa-map-marker-alt"></i> ТВОЁ МЕСТОПОЛОЖЕНИЕ: 
+            <span id="screenUserLoc" class="highlight-loc">СКАНИРОВАНИЕ...</span>
+        </div>
+        <div class="sakura-location-box" style="font-size:0.8rem;">
+            La felicità ama il silenzio
+        </div>
+        <button class="enter-samurai" id="enterBtn"> Войти </button>
+        <div class="status-terminal">
+            >  СИСТЕМА: KaNuKa v2.0 <br>
+            >  МЕСТО: <span id="termLocSpan">ОПРЕДЕЛЯЮ...</span>
+        </div>
+    </div>
+</div>
+
+<!-- ОСНОВНОЙ КОНТЕНТ (ВСЁ НА РУССКОМ) -->
+<div class="main-content" id="mainContent">
+    <section class="hero-samurai">
+        <div class="hero-grid">
+            <div class="avatar-katana fade-up">
+                <div class="katana-circle">
+                    <img src="logo.png" alt="PARADOX" class="avatar-img" onerror="this.src='https://placehold.co/400x400/2a1a20/e2a1b0?text=侍'">
+                </div>
+                <div class="status-dot-sakura"></div>
+                <div style="text-align:center; margin-top:10px; font-size:0.7rem; opacity:0.6;"><i class="fas fa-feather-alt"></i>  alex g</div>
+            </div>
+            <div class="fade-up">
+                <h1 class="hero-title">PARADOX</h1>
+                <div class="hero-sub">« Какой же ты лаки »<br>  —  нищий плеер</div>
+                <div class="stats-row">
+                    <div class="stat-pill"><i class="fas fa-circle" style="color:#e2a1b0;"></i> Оффлайн</div>
+                    <div class="stat-pill"><i class="fas fa-microchip"></i> Ryzen 5 3600</div>
+                    <div class="stat-pill"><i class="fas fa-map-marker-alt"></i> <span id="heroCountryDisplay">Казахстан</span></div>
+                </div>
+                <p class="description-text">
+                    Обычный типок, который страдает фигнёй в интернете. Страшный майнкрафтер. 
+                    Любит музыку и игры.
+                </p>
+                <div class="social-links-jp">
+                    <a href="https://t.me/luckyametist" target="_blank" class="soc-icon" id="tgLinkBtn"><i class="fab fa-telegram"></i></a>
+                    <a href="https://discord.com/users/1312012805913837608" target="_blank" class="soc-icon"><i class="fab fa-discord"></i></a>
+                    <a href="https://www.youtube.com/@zhdufeedback" target="_blank" class="soc-icon"><i class="fab fa-youtube"></i></a>
+                    <a href="https://ru.namemc.com/profile/LuckyParadox.1" target="_blank" class="soc-icon"><i class="gi gi-cube"></i></a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="bushido-section">
+        <div class="section-header fade-up">
+            ИНФОРМАЦИЯ
+            <span> </span>
+        </div>
+        <div class="grid-bushido">
+            <!-- ЛЕВАЯ КОЛОНКА: ПРОЕКТЫ -->
+            <div class="card-samurai fade-up">
+                <div class="card-header-icon">
+                    <i class="fas fa-rocket"></i>
+                    <h3 style="font-size:1.4rem;">ПРОЕКТЫ</h3>
+                </div>
+                <a href="https://t.me/luckyparadoxx" target="_blank" style="text-decoration: none; color: inherit;">
+                    <div class="project-item">
+                        <div class="project-title"><i class="fab fa-telegram"></i> Пустошь удачи</div>
+                        <p style="color:#bc9ea5; font-size:0.9rem; margin: 8px 0;">Telegram • Личный тгк Парадокса</p>
+                        <div class="tag-group">
+                            <span class="tag">Активен</span>
+                            <span class="tag">Мразь</span>
+                        </div>
+                    </div>
+                </a>
+                <div class="project-item">
+                    <div class="project-title"><i class="fab fa-discord"></i> Lunar Client</div>
+                    <p style="color:#bc9ea5; font-size:0.9rem; margin: 8px 0;">Discord • Майнкрафт клиент</p>
+                    <div class="tag-group">
+                        <span class="tag">Разработка</span>
+                        <span class="tag">Java</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ПРАВАЯ КОЛОНКА: ИНФОРМАЦИЯ -->
+            <div class="card-samurai fade-up">
+                <div class="card-header-icon">
+                    <i class="fas fa-user-ninja"></i>
+                    <h3 style="font-size:1.4rem;">ОБО МНЕ</h3>
+                </div>
+                <div class="info-row"><i class="fas fa-user"></i> <span><strong>Возраст:</strong> 15 лет</span></div>
+                <div class="info-row"><i class="fas fa-gamepad"></i> <span><strong>Игры:</strong> Minecraft, CS2, Fortnite, Rust, GTA V</span></div>
+                <div class="info-row"><i class="fas fa-music"></i> <span><strong>Музыка:</strong> Face, wifiskeleton, Alex G, Fludd, ssshhhiiittt!, tv girl, Время и Стекло, Автоспорт, PinkPantheress, s0rrow, LiLPeep, overtonight, dabbackwood, mapt0vt</span></div>
+                <div class="info-row"><i class="fas fa-users"></i> <span><strong>Друзья:</strong> zxcmqoine, IPSC, Wollack, shhtott, xesher, eternity, tjoma, flehbac, kicread, s1ska_mur@vya, kavinki, akmar, dread, rau4n</span></div>
+                <div class="info-row"><i class="fas fa-people-group"></i> <span><strong>Сквады:</strong> Банда Попского</span></div>
+                <div class="quote-samurai">
+                    <p>«Искал медь — сгорел медведь.»</p>
+                    <p style="font-size:0.8rem; margin-top:5px;">— Великий Хилсик</p>
+                </div>
+            </div>
+
+            <!-- СТАТИСТИКА (полная ширина) -->
+            <div class="card-samurai fade-up" style="grid-column: span 2;">
+                <div class="card-header-icon">
+                    <i class="fas fa-chart-line"></i>
+                    <h3>СТАТИСТИКА ИГР</h3>
+                </div>
+                <div>
+                    <div class="game-stat">
+                        <div class="game-label"><span><i class="gi gi-cube"></i> Minecraft</span><span>60%</span></div>
+                        <div class="bar-bg"><div class="bar-fill" data-width="60" style="width:0%"></div></div>
+                    </div>
+                    <div class="game-stat">
+                        <div class="game-label"><span><i class="fas fa-crosshairs"></i> Counter-Strike 2</span><span>30%</span></div>
+                        <div class="bar-bg"><div class="bar-fill" data-width="30" style="width:0%"></div></div>
+                    </div>
+                    <div class="game-stat">
+                        <div class="game-label"><span><i class="fas fa-bolt"></i> Fortnite</span><span>8%</span></div>
+                        <div class="bar-bg"><div class="bar-fill" data-width="8" style="width:0%"></div></div>
+                    </div>
+                    <div class="game-stat">
+                        <div class="game-label"><span><i class="fas fa-skull"></i> Rust</span><span>2%</span></div>
+                        <div class="bar-bg"><div class="bar-fill" data-width="2" style="width:0%"></div></div>
+                    </div>
+                    <div class="activity-block">
+                        <div style="font-size: 2.4rem; font-weight:700;">100+</div>
+                        <div>сломанных режимов сна</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- МУЗЫКА ПЛЕЕР YOUTUBE -->
+            <div class="music-player-container fade-up">
+                <div class="card-samurai" style="text-align:center;">
+                    <div class="card-header-icon" style="justify-content: center;">
+                        <i class="fab fa-youtube"></i>
+                        <h3>МУЗЫКА</h3>
+                    </div>
+                    <div class="youtube-player">
+                        <iframe src="https://www.youtube.com/embed/iu8Lh4xvx3g?si=HTY7KkdA5FplN4I8" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer-samurai fade-up">
+        <p>PARADOX © 2026 — Путь далбоебизма</p>
+        <p style="opacity: 0.6; margin-top: 8px;">Сделано с <i class="fas fa-feather-alt"></i> надеждой на превосходство</p>
+    </footer>
+</div>
+
+<script>
+    // 1. Эффект падающих лепестков сакуры (canvas)
+    function initSakuraPetals() {
+        const canvas = document.getElementById('petalCanvas');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        let petals = [];
+        const PETAL_COUNT = 80;
+
+        for (let i = 0; i < PETAL_COUNT; i++) {
+            petals.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                size: 8 + Math.random() * 10,
+                speedY: 0.5 + Math.random() * 1.2,
+                speedX: -0.3 + Math.random() * 0.6,
+                rotation: Math.random() * Math.PI * 2,
+                rotSpeed: 0.01 + Math.random() * 0.02,
+                opacity: 0.4 + Math.random() * 0.5
+            });
+        }
+
+        function drawPetals() {
+            if (!ctx) return;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (let p of petals) {
+                ctx.save();
+                ctx.translate(p.x, p.y);
+                ctx.rotate(p.rotation);
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.quadraticCurveTo(p.size * 0.4, -p.size * 0.6, p.size, 0);
+                ctx.quadraticCurveTo(p.size * 0.4, p.size * 0.6, 0, 0);
+                ctx.fillStyle = `rgba(226, 161, 176, ${p.opacity * 0.8})`;
+                ctx.fill();
+                ctx.restore();
+
+                p.x += p.speedX;
+                p.y += p.speedY;
+                p.rotation += p.rotSpeed;
+                if (p.y > canvas.height) p.y = -20;
+                if (p.x > canvas.width) p.x = -20;
+                if (p.x < -30) p.x = canvas.width + 10;
+            }
+            requestAnimationFrame(drawPetals);
+        }
+        drawPetals();
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+    }
+
+    // 2. Определение страны пользователя
+    async function getUserCountry() {
+        try {
+            const res = await fetch('https://ipapi.co/json/');
+            const data = await res.json();
+            return data.country_name || data.country || 'Казахстан';
+        } catch(e) {
+            try {
+                const res2 = await fetch('https://ipinfo.io/json');
+                const data2 = await res2.json();
+                return data2.country || 'Казахстан';
+            } catch(e2) {
+                return 'Казахстан';
+            }
+        }
+    }
+
+    // 3. Управление заставкой
+    let sakuraInterval;
+    const matrixScreen = document.getElementById('sakuraScreen');
+    const mainContent = document.getElementById('mainContent');
+    const enterBtn = document.getElementById('enterBtn');
+
+    window.addEventListener('DOMContentLoaded', async () => {
+        initSakuraPetals();
+        const country = await getUserCountry();
+        // Обновить везде
+        const screenLocSpan = document.getElementById('screenUserLoc');
+        const termLocSpan = document.getElementById('termLocSpan');
+        const heroCountrySpan = document.getElementById('heroCountryDisplay');
+        if (screenLocSpan) screenLocSpan.innerText = country.toUpperCase();
+        if (termLocSpan) termLocSpan.innerText = country.toUpperCase();
+        if (heroCountrySpan) heroCountrySpan.innerText = country;
+    });
+
+    enterBtn.addEventListener('click', () => {
+        // Плавно скрыть заставку
+        matrixScreen.style.opacity = '0';
+        matrixScreen.style.transition = 'opacity 0.8s ease';
+        setTimeout(() => {
+            matrixScreen.style.display = 'none';
+            mainContent.classList.add('show');
+            document.body.style.overflow = 'auto';
+            initScrollAnimations();
+            startProgressBars();
+            updateClock();
+        }, 900);
+    });
+
+    function startProgressBars() {
+        const fills = document.querySelectorAll('.bar-fill');
+        fills.forEach(bar => {
+            const widthVal = bar.getAttribute('data-width');
+            if (widthVal) setTimeout(() => { bar.style.width = widthVal + '%'; }, 300);
+        });
+    }
+
+    function updateClock() {
+        // оставляем пустым
+    }
+
+    function initScrollAnimations() {
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, { threshold: 0.1, rootMargin: '0px 0px -30px 0px' });
+        document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+        // дополнительно добавим для уже видимых
+        document.querySelectorAll('.fade-up').forEach(el => {
+            if (el.getBoundingClientRect().top < window.innerHeight - 100) el.classList.add('visible');
+        });
+    }
+
+    // ловим клик на телеграм (ссылка уже есть, но для акцента)
+    const tgBtn = document.getElementById('tgLinkBtn');
+    if (tgBtn) {
+        tgBtn.addEventListener('click', (e) => {
+            console.log('переход в телеграм');
+        });
+    }
+</script>
+</body>
+</html>
